@@ -15,5 +15,9 @@
     "url": "https://github.com/TheInfluencer1/TheInfluencer-Backend-services/issues"
   },
   "homepage": "https://github.com/TheInfluencer1/TheInfluencer-Backend-services#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "mongoose": "^8.9.5"
+  }
 }
