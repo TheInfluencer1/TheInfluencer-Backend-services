@@ -14,7 +14,7 @@ const app = express();
 
 // CORS Configuration (Allows Specific Origins)
 app.use(cors({
-    origin: process.env.WEB_URL || "*", // Change '*' to a specific frontend URL for security
+    origin: process.env.WEB_URL || "*", 
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
 }));
