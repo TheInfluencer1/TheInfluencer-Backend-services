@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
-const AWS = require("aws-sdk");
+// const AWS = require("aws-sdk");
 const router = express.Router();
 const {authMiddleware }= require('../utils/auth_utils');
 const  {
@@ -14,21 +14,12 @@ const  {
     SERVER_ERRORS,
     SUCCESS_MESSAGES,
 } = require('../../../../config/const');
-
-
-// Configure AWS SES
-AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
-    region: process.env.AWS_REGION, 
-});
-
-const ses = new AWS.SES({ apiVersion: "2010-12-01" });
+const { run } = require("../../../../config/ses");
 
 // Utility function to generate a 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// Send Verification OTP via Amazon SES
+// Send Verification OTP via Amazon SES using the `run` function
 router.post("/api/send-verification-otp", authMiddleware, async (req, res) => {
     try {
         const { email } = req.body;
@@ -44,34 +35,22 @@ router.post("/api/send-verification-otp", authMiddleware, async (req, res) => {
 
         // Check if already verified
         if (user.is_verified) {
-            return res.status(400).json({ error: OTP_ERRORS.ACCOUNT_ALREADY_VERIFIED});
+            return res.status(400).json({ error: OTP_ERRORS.ACCOUNT_ALREADY_VERIFIED });
         }
 
         // Generate OTP
         const otp = generateOTP();
-        const otpExpires = new Date(Date.now() + 5 * 60 * 1000); 
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
         // Save OTP to user model
         user.otp = otp;
         user.otpExpires = otpExpires;
         await user.save();
 
-        // Prepare SES email parameters
-        const params = {
-            Source: process.env.SES_EMAIL, 
-            Destination: { ToAddresses: [email] },
-            Message: {
-                Subject: { Data: "Your Verification OTP" },
-                Body: {
-                    Text: {
-                        Data: `Your verification OTP is: ${otp}. This OTP will expire in 5 minutes.`,
-                    },
-                },
-            },
-        };
-
-        // Send email using SES
-        await ses.sendEmail(params).promise();
+        // Send email using `run` function from SES module
+        // email will be receipent email 
+        // ses will be sender email 
+        await run(email, process.env.SES_EMAIL, `<h1>Your Verification OTP</h1><p>Your OTP is: <b>${otp}</b>. It expires in 5 minutes.</p>`);
 
         res.status(200).json({ message: SUCCESS_MESSAGES.OTP_SENT });
     } catch (err) {
