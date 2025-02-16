@@ -7,68 +7,55 @@ const { sesClient } = require("../aws/sesClient");
  * 
  * @param {string} toAddress - The recipient's email address.
  * @param {string} fromAddress - The sender's verified email address in AWS SES.
+ * @param {string} otp - The OTP to send.
  * @returns {SendEmailCommand} - A command to send an email.
  */
-const createSendEmailCommand = (toAddress, fromAddress) => {
+const createSendEmailCommand = (toAddress, fromAddress, otp) => {
   return new SendEmailCommand({
     Destination: {
-      /* Add CC email addresses here if needed */
-      CcAddresses: [
-        // "cc-recipient@example.com",
-      ],
-      /* Add one or more To email addresses */
-      ToAddresses: [
-        toAddress, // The primary recipient
-        // "another-recipient@example.com", // Add more recipients if needed
-      ],
+      ToAddresses: [toAddress],
     },
     Message: {
-      /* The body of the email */
+      Subject: {
+        Charset: "UTF-8",
+        Data: "Your OTP Code",
+      },
       Body: {
         Html: {
           Charset: "UTF-8",
-          Data: "<h1>Hello, this is an HTML email!</h1><p>Custom HTML body goes here.</p>",
+          Data: `
+            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 400px; margin: auto;">
+              <h2 style="color: #333;">Your OTP Code</h2>
+              <p style="font-size: 18px; color: #555;">Use the following OTP to complete your verification:</p>
+              <h1 style="font-size: 32px; color: #007BFF; margin: 10px 0;">${otp}</h1>
+              <p style="font-size: 14px; color: #888;">This OTP is valid for 10 minutes.</p>
+            </div>
+          `,
         },
         Text: {
           Charset: "UTF-8",
-          Data: "Hello, this is a plain text email! Custom text body goes here.",
+          Data: `Your OTP code is: ${otp}. This OTP is valid for 10 minutes.`,
         },
       },
-      /* The subject of the email */
-      Subject: {
-        Charset: "UTF-8",
-        Data: "Your Email Subject Here",
-      },
     },
-    /* The sender's email address (must be verified in AWS SES) */
     Source: fromAddress,
-
-    /* Add optional Reply-To email addresses if needed */
-    ReplyToAddresses: [
-      // "reply-to@example.com",
-    ],
   });
 };
 
 /**
  * Function to execute the email send operation using AWS SES.
  */
-const run = async (toAddress, fromAddress) => {
-  const sendEmailCommand = createSendEmailCommand(toAddress, fromAddress);
+const run = async (toAddress, fromAddress, otp) => {
+  const sendEmailCommand = createSendEmailCommand(toAddress, fromAddress, otp);
 
   try {
-    // Send the email using the AWS SES client
-    return await sesClient.send(sendEmailCommand);
-  } catch (caught) {
-    // Handle SES-specific errors
-    if (caught instanceof Error && caught.name === "MessageRejected") {
-      /** @type { import('@aws-sdk/client-ses').MessageRejected} */
-      return caught;
-    }
-    // Re-throw any other errors
-    throw caught;
+    const response = await sesClient.send(sendEmailCommand);
+    console.log("Email sent successfully:", response);
+    return response;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
   }
 };
-
 
 module.exports = { run, createSendEmailCommand };

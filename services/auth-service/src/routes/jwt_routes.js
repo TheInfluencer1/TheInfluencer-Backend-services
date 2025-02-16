@@ -49,7 +49,7 @@ router.post("/api/send-verification-otp", authMiddleware, async (req, res) => {
         // Send email using `run` function from SES module
         // email will be receipent email 
         // ses will be sender email 
-        await run(email, process.env.SES_EMAIL, `<h1>Your Verification OTP</h1><p>Your OTP is: <b>${otp}</b>. It expires in 5 minutes.</p>`);
+        await run(email, process.env.SES_EMAIL,otp);
 
         res.status(200).json({ message: SUCCESS_MESSAGES.OTP_SENT });
     } catch (err) {

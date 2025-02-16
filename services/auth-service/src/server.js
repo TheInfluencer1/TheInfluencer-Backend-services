@@ -30,21 +30,6 @@ app.use((req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
 
-
-// mongoose.connect(process.env.AUTH_DB_URI, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// });
-
-// mongoose.connection.on("connected", () => {
-//   console.log("Connected to MongoDB successfully!");
-// });
-
-// mongoose.connection.on("error", (err) => {
-//   console.error("MongoDB connection error:", err);
-// });
-
-
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
