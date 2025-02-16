@@ -1,11 +1,11 @@
 "use strict";
-
+const mongoose = require("mongoose");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const jwtRoutes = require("./routes/jwt_routes");
-const {connectDB} = require('../../../config/db');
+const {connectDB} = require('./utils/db');
 dotenv.config();
 
 connectDB(process.env.AUTH_DB_URI);
@@ -29,6 +29,21 @@ app.use("/v1", jwtRoutes);
 app.use((req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
+
+
+// mongoose.connect(process.env.AUTH_DB_URI, {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
+
+// mongoose.connection.on("connected", () => {
+//   console.log("Connected to MongoDB successfully!");
+// });
+
+// mongoose.connection.on("error", (err) => {
+//   console.error("MongoDB connection error:", err);
+// });
+
 
 const PORT = process.env.PORT || 5001;
 

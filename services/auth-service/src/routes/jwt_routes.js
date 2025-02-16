@@ -14,8 +14,7 @@ const  {
     SERVER_ERRORS,
     SUCCESS_MESSAGES,
 } = require('../../../../config/const');
-const { run } = require("../../../../config/ses");
-
+const {run} = require("../utils/ses");
 // Utility function to generate a 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -98,42 +97,32 @@ router.post("/api/verify-otp", authMiddleware, async (req, res) => {
     }
 });
 
-// Signup Route
+// signup api
 router.post("/api/signup", async (req, res) => {
     try {
         const { name, email, password, confirm_password, user_type } = req.body;
 
-        // Check for missing fields
         if (!name || !email || !password || !confirm_password || !user_type) {
             return res.status(400).json({ error: "Please enter all required fields" });
         }
 
-        // Check if passwords match
         if (password !== confirm_password) {
             return res.status(400).json({ error: "Confirm password does not match password" });
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: "User already exists. Please log in." });
         }
 
-        // Hash the password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create user instance
         const user = new User({
             name,
             email,
-            password: hashedPassword,
+            password,
             user_type,
-            // Default false until verified
-            is_verified: false, 
+            is_verified: false,
         });
 
-        // Save user to database
         await user.save();
 
         res.status(201).json({ message: "User registered successfully. Please verify your account." });
@@ -143,7 +132,7 @@ router.post("/api/signup", async (req, res) => {
     }
 });
 
-// Login Route with Verification Check
+// login api region
 router.post("/api/login", async (req, res) => {
     try {
         const { email, password, user_type } = req.body;
@@ -159,18 +148,19 @@ router.post("/api/login", async (req, res) => {
             return res.status(400).json({ error: "Email does not exist. Please Sign Up" });
         }
 
+        // Validate user type
+        if (user.user_type !== user_type) {
+            return res.status(400).json({ error: "Invalid user type" });
+        }
+
         // Compare password
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await user.comparePassword(password);
         if (!isMatch) {
             return res.status(400).json({ error: "Invalid credentials" });
         }
 
         // Generate JWT token
-        const token = jwt.sign(
-            { _id: user._id, user_type: user.user_type },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+        const token = await user.getJWT();
 
         // Store the token in Cookies
         res.cookie("token", token, {
