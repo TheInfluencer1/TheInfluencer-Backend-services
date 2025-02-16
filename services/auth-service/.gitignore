@@ -1,2 +1,3 @@
 node_modules
-package-lock.jsonservices/auth-service/.env
+package-lock.json
+services/auth-service/.env
