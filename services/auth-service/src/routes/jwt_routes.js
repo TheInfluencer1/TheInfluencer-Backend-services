@@ -58,6 +58,44 @@ router.post("/api/send-verification-otp", authMiddleware, async (req, res) => {
     }
 });
 
+// Resend OTP API
+router.post("/api/resend-otp", async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: OTP_ERRORS.EMAIL_REQUIRED });
+        }
+
+        // Find user
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: AUTH_ERRORS.USER_NOT_FOUND });
+        }
+
+        // Check if already verified
+        if (user.is_verified) {
+            return res.status(400).json({ error: OTP_ERRORS.ACCOUNT_ALREADY_VERIFIED });
+        }
+
+        // Generate new OTP
+        const otp = generateOTP();
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+        // Update OTP details
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        // Send OTP via email
+        await run(email, process.env.SES_EMAIL, otp);
+
+        res.status(200).json({ message: SUCCESS_MESSAGES.OTP_SENT });
+    } catch (err) {
+        console.error("ERROR: ", err);
+        res.status(500).json({ error: SERVER_ERRORS.INTERNAL_ERROR });
+    }
+});
+
 // Verify OTP and Activate Account
 router.post("/api/verify-otp", authMiddleware, async (req, res) => {
     try {
@@ -91,6 +129,72 @@ router.post("/api/verify-otp", authMiddleware, async (req, res) => {
         await user.save();
 
         res.status(200).json({ message: SUCCESS_MESSAGES.ACCOUNT_VERIFIED });
+    } catch (err) {
+        console.error("ERROR: ", err);
+        res.status(500).json({ error: SERVER_ERRORS.INTERNAL_ERROR });
+    }
+});
+
+// Forgot Password API
+router.post("/api/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: "Email is required" });
+        }
+
+        // Find user
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: AUTH_ERRORS.USER_NOT_FOUND });
+        }
+
+        // Generate OTP for password reset
+        const otp = generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Save OTP to user model
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        // Send OTP via email
+        await run(email, process.env.SES_EMAIL, otp);
+
+        res.status(200).json({ message: "Password reset OTP sent successfully" });
+    } catch (err) {
+        console.error("ERROR: ", err);
+        res.status(500).json({ error: SERVER_ERRORS.INTERNAL_ERROR });
+    }
+});
+
+// Verify OTP and Reset Password
+router.post("/api/reset-password", async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ error: "Email, OTP, and new password are required" });
+        }
+
+        // Find user
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: AUTH_ERRORS.USER_NOT_FOUND });
+        }
+
+        // Check OTP validity
+        if (!user.otp || user.otp !== otp || new Date() > user.otpExpires) {
+            return res.status(400).json({ error: OTP_ERRORS.INVALID_OTP });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        user.otp = null;
+        user.otpExpires = null;
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successfully" });
     } catch (err) {
         console.error("ERROR: ", err);
         res.status(500).json({ error: SERVER_ERRORS.INTERNAL_ERROR });

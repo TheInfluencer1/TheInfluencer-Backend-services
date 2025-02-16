@@ -1,4 +1,4 @@
-// Import the required AWS SES modules
+
 const { SendEmailCommand } = require("@aws-sdk/client-ses");
 const { sesClient } = require("../aws/sesClient");
 
@@ -28,13 +28,13 @@ const createSendEmailCommand = (toAddress, fromAddress, otp) => {
               <h2 style="color: #333;">Your OTP Code</h2>
               <p style="font-size: 18px; color: #555;">Use the following OTP to complete your verification:</p>
               <h1 style="font-size: 32px; color: #007BFF; margin: 10px 0;">${otp}</h1>
-              <p style="font-size: 14px; color: #888;">This OTP is valid for 10 minutes.</p>
+              <p style="font-size: 14px; color: #888;">This OTP is valid for 5 minutes.</p>
             </div>
           `,
         },
         Text: {
           Charset: "UTF-8",
-          Data: `Your OTP code is: ${otp}. This OTP is valid for 10 minutes.`,
+          Data: `Your OTP code is: ${otp}. This OTP is valid for 5 minutes.`,
         },
       },
     },
@@ -42,9 +42,8 @@ const createSendEmailCommand = (toAddress, fromAddress, otp) => {
   });
 };
 
-/**
- * Function to execute the email send operation using AWS SES.
- */
+// Function to execute the email send operation using AWS SES.
+
 const run = async (toAddress, fromAddress, otp) => {
   const sendEmailCommand = createSendEmailCommand(toAddress, fromAddress, otp);
 
