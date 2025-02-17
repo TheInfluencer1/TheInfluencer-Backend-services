@@ -13,12 +13,26 @@ const connectionRequestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Close Deal", "Reject Deal", "Pending"], // Added "Pending"
+        enum: ["CloseDeal", "RejectDeal", "Pending"], 
         default: "Pending"
     }    
-},{
+}, {
     timestamps: true
 });
 
-const connectionRequestModel = mongoose.model('ConnectionRequest', connectionRequestSchema);
+connectionRequestSchema.pre("save", function (next) {
+    if (this.fromBrandId.equals(this.toInfluencerId)) {
+        return next(new Error("fromBrandId and toInfluencerId should be different"));
+    }
 
+    const statusVal = ["CloseDeal", "RejectDeal", "Pending"];
+    if (!statusVal.includes(this.status)) {
+        return next(new Error("Invalid Status"));
+    }
+
+    next();
+});
+
+const connectionRequestModel = mongoose.model("ConnectionRequest", connectionRequestSchema);
+
+module.exports = connectionRequestModel;
