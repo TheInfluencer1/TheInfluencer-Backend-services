@@ -44,26 +44,26 @@ UserSchema.methods.getJWT = async function() {
     return token;
 };
 
-// Post-save hook: Create Influencer Profile if user_type is "influencer"
-// UserSchema.post('save', async function (doc, next) {
-//     if (doc.user_type === 'influencer') {
-//         try {
-//             const existingProfile = await InfluencerProfile.findOne({ user_id: doc.user_id });
-//             if (!existingProfile) {
-//                 await InfluencerProfile.create({
-//                     user_id: doc.user_id,
-//                     full_name: doc.name, 
-//                     email: doc.email, 
-//                     is_verified: doc.is_verified
-//                 });
-//                 console.log(`Influencer profile created for user_id: ${doc.user_id}`);
-//             }
-//         } catch (error) {
-//             console.error("Error creating influencer profile:", error);
-//         }
-//     }
-//     next();
-// });
+//Post-save hook: Create Influencer Profile if user_type is "influencer"
+UserSchema.post('save', async function (doc, next) {
+    if (doc.user_type === 'influencer') {
+        try {
+            const existingProfile = await InfluencerProfile.findOne({ user_id: doc.user_id });
+            if (!existingProfile) {
+                await InfluencerProfile.create({
+                    user_id: doc.user_id,
+                    full_name: doc.name, 
+                    email: doc.email, 
+                    is_verified: doc.is_verified
+                });
+                console.log(`Influencer profile created for user_id: ${doc.user_id}`);
+            }
+        } catch (error) {
+            console.error("Error creating influencer profile:", error);
+        }
+    }
+    next();
+});
 
 
 module.exports = mongoose.model('User', UserSchema);
