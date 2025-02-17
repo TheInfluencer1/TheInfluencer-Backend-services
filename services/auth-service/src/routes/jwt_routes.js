@@ -172,6 +172,7 @@ router.post("/api/forgot-password", async (req, res) => {
 router.post("/api/reset-password", async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
+
         if (!email || !otp || !newPassword) {
             return res.status(400).json({ error: "Email, OTP, and new password are required" });
         }
@@ -187,19 +188,23 @@ router.post("/api/reset-password", async (req, res) => {
             return res.status(400).json({ error: OTP_ERRORS.INVALID_OTP });
         }
 
-        // Hash new password
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(newPassword, salt);
+        // Assign new password (pre-save hook will hash it)
+        user.password = newPassword;
+
+        // Clear OTP fields
         user.otp = null;
         user.otpExpires = null;
+
+        // Save user (pre-save will hash the password)
         await user.save();
 
-        res.status(200).json({ message: "Password reset successfully" });
+        return res.status(200).json({ message: "Password reset successfully" });
     } catch (err) {
-        console.error("ERROR: ", err);
-        res.status(500).json({ error: SERVER_ERRORS.INTERNAL_ERROR });
+        console.error("ERROR:", err);
+        return res.status(500).json({ error: SERVER_ERRORS.INTERNAL_ERROR });
     }
 });
+
 
 // signup api
 router.post("/api/signup", async (req, res) => {
