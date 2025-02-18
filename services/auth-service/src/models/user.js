@@ -64,6 +64,6 @@ UserSchema.post('save', async function (doc, next) {
     }
     next();
 });
-
+console.log("helo")
 
 module.exports = mongoose.model('User', UserSchema);
