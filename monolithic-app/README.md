@@ -69,7 +69,7 @@ A comprehensive backend system for the influencer marketing platform built with 
    Create a `.env` file in the root directory:
    ```env
    # Server Configuration
-   PORT=5000
+   PORT=8000
    NODE_ENV=development
    
    # Database
