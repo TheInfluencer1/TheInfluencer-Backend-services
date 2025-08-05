@@ -6,6 +6,7 @@ const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+        console.log("Token received:", token);
 
         if (!token) {
             return res.status(401).json({
@@ -15,7 +16,10 @@ const authenticateToken = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findOne({ user_id: decoded.user_id });
+         console.log("Decoded user:", decoded);
+        const user = await User.findOne({ _id: decoded._id });
+       
+        console.log("User found:", user);
 
         if (!user || !user.is_active) {
             return res.status(401).json({
@@ -23,8 +27,9 @@ const authenticateToken = async (req, res, next) => {
                 message: 'Invalid or inactive user'
             });
         }
-
+        console.log("User authenticated successfully:", user);
         req.user = user;
+        console.log("User added to request:", req.user);
         next();
     } catch (error) {
         if (error.name === 'JsonWebTokenError') {

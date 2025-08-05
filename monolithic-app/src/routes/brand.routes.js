@@ -1143,4 +1143,6 @@ router.get('/public/:id', BrandController.getPublicProfile);
  */
 router.post('/public/:id/view', BrandController.recordProfileView);
 
+
+
 module.exports = router; 

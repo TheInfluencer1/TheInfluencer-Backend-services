@@ -37,6 +37,7 @@ const InfluencerController = require('../controllers/influencer.controller');
  */
 router.get('/profile', authenticateToken, authorizeRoles('influencer'), InfluencerController.getProfile);
 
+
 /**
  * @swagger
  * /api/influencer/profile:

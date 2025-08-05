@@ -11,7 +11,10 @@ class InfluencerController {
     // Profile Management
     static async getProfile(req, res) {
         try {
+            const user = req.user;
+            console.log("User authenticated:", user);
             const profile = await InfluencerProfile.findOne({ user_id: req.user.user_id });
+            console.log("profile is : ", profile);
             
             if (!profile) {
                 return res.status(404).json({

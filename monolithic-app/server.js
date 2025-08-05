@@ -39,8 +39,7 @@ app.use(limiter);
 
 // Middleware
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'],
-    credentials: true
+    origin: "*" , // Allow all origins for development, restrict in production
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -137,10 +136,11 @@ const swaggerOptions = {
             }
         },
         tags: [
-            { name: 'Authentication', description: 'Authentication endpoints' },
+           
             { name: 'Influencer', description: 'Influencer-specific endpoints' },
             { name: 'Brand', description: 'Brand-specific endpoints' },
-            { name: 'Admin', description: 'Admin management endpoints' }
+            { name: 'Admin', description: 'Admin management endpoints' },
+
         ]
     },
     apis: ['./src/routes/*.js'], // Path to the API routes
